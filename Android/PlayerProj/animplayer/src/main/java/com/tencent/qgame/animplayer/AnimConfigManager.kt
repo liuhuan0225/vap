@@ -138,13 +138,7 @@ class AnimConfigManager(val player: AnimPlayer) {
 
         if (head == null) {
             ALog.e(TAG, "vapc box head not found")
-            // 按照默认配置生成config
-            config.apply {
-                isDefaultConfig = true
-                this.defaultVideoMode = defaultVideoMode
-                fps = defaultFps
-            }
-            player.fps = config.fps
+            applyDefaultConfig(config, defaultVideoMode, defaultFps)
             return true
         }
 
@@ -156,12 +150,29 @@ class AnimConfigManager(val player: AnimPlayer) {
         val json = String(vapcBuf, 0, vapcBuf.size, Charset.forName("UTF-8"))
         val jsonObj = JSONObject(json)
         config.jsonConfig = jsonObj
-        val result = config.parse(jsonObj)
+        if (!config.parse(jsonObj)) {
+            config.jsonConfig = null
+            ALog.e(TAG, "vapc error")
+            applyDefaultConfig(config, defaultVideoMode, defaultFps)
+            return true
+        }
         if (defaultFps > 0) {
             config.fps = defaultFps
         }
         player.fps = config.fps
-        return result
+        return true
+    }
+
+    /**
+     * 按照默认配置生成config（兼容老视频格式）
+     */
+    private fun applyDefaultConfig(config: AnimConfig, videoMode: Int, fps: Int) {
+        config.apply {
+            isDefaultConfig = true
+            defaultVideoMode = videoMode
+            this.fps = fps
+        }
+        player.fps = config.fps
     }
 
     private fun parseBoxHead(boxHead: ByteArray): BoxHead? {
