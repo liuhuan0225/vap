@@ -55,7 +55,7 @@ class AnimConfig {
     fun parse(json: JSONObject): Boolean {
         return try {
             json.getJSONObject("info").apply {
-                val v = getInt("v")
+                val v = optInt("v", 0)
                 if (version != v) {
                     ALog.e(TAG, "current version=$version target=$v")
                     return false
